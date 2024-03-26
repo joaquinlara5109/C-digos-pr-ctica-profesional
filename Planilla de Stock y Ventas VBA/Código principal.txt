@@ -1,0 +1,327 @@
+Private Sub cmbs_Change()
+    Dim filtro1 As Variant
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    ' Obtener el valor actual del ComboBox cmbs
+    filtro1 = Me.cmbs.Value
+
+    ' Limpiar cualquier filtro existente
+    If ws.AutoFilterMode Then
+        ws.AutoFilterMode = False
+    End If
+
+    ' Si cmbs está vacío, no aplicar ningún filtro
+    If filtro1 = "" Then
+        cmbs.Clear
+    End If
+    
+
+    ' Aplicar filtro según los casos
+    With ws
+        If filtro1 = "Sin Stock" Then
+            .Range("A6").AutoFilter Field:=31, Criteria1:="<1"
+        ElseIf filtro1 = "Con Stock" Then
+            .Range("A6").AutoFilter Field:=31, Criteria1:=">=1"
+        Else ' Filtrar si se ingresó un valor personalizado
+            .Range("A6").AutoFilter Field:=31, Criteria1:=filtro1
+        End If
+    End With
+End Sub
+
+
+
+
+
+Private Sub cmb_Change()
+   
+    Dim filtro1 As String
+   
+    Dim celda As Range
+  
+
+    ' Establecer el filtro para la sucursal
+    filtro1 = "*" & cmb.Text & "*"
+    With Sheets("Sheet1")
+        If .AutoFilterMode Then
+            .AutoFilterMode = False
+        End If
+        .Range("A6").AutoFilter Field:=1, Criteria1:=filtro1
+    End With
+    
+    
+
+End Sub
+
+Private Sub cmb1_Change()
+   
+    Dim filtro1 As String
+    Dim wsRelaciones As Worksheet
+    Dim celda As Range
+    Dim ultimaFila As Long
+
+    ' Limpiar cmb2 antes de llenarlo con nuevas subfamilias
+    cmb2.Clear
+
+    ' Establecer el filtro para la familia seleccionada en cmb1
+    filtro1 = "*" & cmb1.Text & "*"
+    With Sheets("Sheet1")
+        If .AutoFilterMode Then
+            .AutoFilterMode = False
+        End If
+        .Range("Z6").AutoFilter Field:=26, Criteria1:=filtro1
+    End With
+
+    ' Referencia a la hoja donde se encuentran las relaciones familia-subfamilia
+    Set wsRelaciones = ThisWorkbook.Sheets("Relaciones")
+    
+    ' Encuentra la última fila con datos en la columna A de la hoja de relaciones
+    ultimaFila = wsRelaciones.Cells(wsRelaciones.Rows.Count, "A").End(xlUp).Row
+
+    ' Llenar cmb2 con subfamilias basado en la familia seleccionada en cmb1
+    For Each celda In wsRelaciones.Range("A1:A" & ultimaFila)
+        If celda.Value Like filtro1 Then
+            cmb2.AddItem celda.Offset(0, 1).Value
+        End If
+    Next celda
+    
+    
+    
+End Sub
+Private Sub cmb2_Change()
+    Dim filtro2 As String
+    filtro2 = "*" & cmb2.Text & "*"
+    
+    With Sheets("Sheet1")
+        If .AutoFilterMode Then
+            .AutoFilterMode = False
+        End If
+        .Range("AA6").AutoFilter Field:=27, Criteria1:=filtro2
+
+        ' Si cmb1 tiene un valor seleccionado, aplica también su filtro
+        If cmb1.Text <> "" Then
+            Dim filtro1 As String
+            filtro1 = "*" & cmb1.Text & "*"
+            .Range("Z6").AutoFilter Field:=26, Criteria1:=filtro1
+        End If
+    End With
+End Sub
+
+
+
+
+
+
+
+
+
+
+Private Sub Generar_Click()
+
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    ws.Columns("B:C").EntireColumn.Hidden = Me.C.Value
+    ws.Columns("G:M").EntireColumn.Hidden = Me.C.Value
+    ws.Columns("P").EntireColumn.Hidden = Me.C.Value
+    ws.Columns("Y").EntireColumn.Hidden = Me.C.Value
+    ws.Columns("AD").EntireColumn.Hidden = Me.C.Value
+    
+    Me.Hide
+    
+    
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+Private Sub Limpiar_Click()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    ' Mostrar las columnas ocultas por Generar_Click
+    ws.Columns("B:C").EntireColumn.Hidden = False
+    ws.Columns("G:M").EntireColumn.Hidden = False
+    ws.Columns("P").EntireColumn.Hidden = False
+    ws.Columns("Y").EntireColumn.Hidden = False
+    ws.Columns("AD").EntireColumn.Hidden = False
+
+    Me.cmb.Text = ""
+    Me.cmbs.Text = ""
+    Me.cmb1.Text = ""
+    Me.cmb2.Text = ""
+    Me.C.Value = False
+    
+    
+    
+
+
+    Dim tbl As ListObject
+
+    ' Iterar sobre todas las tablas en la hoja y quitar filtros
+    For Each tbl In ws.ListObjects
+        ' Usar ShowAllData para quitar los filtros si están aplicados
+        On Error Resume Next ' Ignorar error si no hay filtros aplicados
+        tbl.Range.AutoFilter
+        tbl.ShowAllData
+        On Error GoTo 0 ' Restablecer el manejo de errores
+    Next tbl
+End Sub
+
+Private Sub UserForm_Initialize()
+
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    Dim tbl As ListObject
+
+    ' Iterar sobre todas las tablas en la hoja y quitar filtros
+    For Each tbl In ws.ListObjects
+        ' Usar ShowAllData para quitar los filtros si están aplicados
+        On Error Resume Next ' Ignorar error si no hay filtros aplicados
+        tbl.Range.AutoFilter
+        tbl.ShowAllData
+        On Error GoTo 0 ' Restablecer el manejo de errores
+    Next tbl
+    
+    'Sucursales
+    
+    Me.cmb.AddItem "CASA MATRIZ"
+    Me.cmb.AddItem "BARRIO INDUSTRIAL"
+    Me.cmb.AddItem "BODEGA CENTRAL"
+    Me.cmb.AddItem "STOCK SERENA"
+    
+    Me.cmbs.AddItem "Con Stock"
+    Me.cmbs.AddItem "Sin Stock"
+    
+    'Familias
+    
+    With Me.cmb1
+    .AddItem "ABRAZADERAS"
+    .AddItem "ABRO"
+    .AddItem "ACCESORIOS"
+    .AddItem "ADITIVOS"
+    .AddItem "AMPOLLETA"
+    .AddItem "ART. ASEO"
+    .AddItem "ART.SEG.PERSONAL"
+    .AddItem "ART. SEGURIDAD VEHICULO"
+    .AddItem "BATERIA"
+    .AddItem "BOCINAS"
+    .AddItem "BOSCH"
+    .AddItem "BUJIAS"
+    .AddItem "CABLES ELECT"
+    .AddItem "CAMARAS"
+    .AddItem "CARBURADOR"
+    .AddItem "CHEVROLET"
+    .AddItem "CHRISLER/DODGE/JEEP"
+    .AddItem "CITROEN"
+    .AddItem "CORDEL"
+    .AddItem "CORREAS"
+    .AddItem "DAEWOO"
+    .AddItem "DAIH"
+    .AddItem "DESODORANTES"
+    .AddItem "ELECTRICO"
+    .AddItem "EMPAQUETADURAS"
+    .AddItem "FAROLES"
+    .AddItem "FILTROS"
+    .AddItem "FIAT"
+    .AddItem "FORCE"
+    .AddItem "FORD"
+    .AddItem "GASFITERIA"
+    .AddItem "GOLILLA PLANA"
+    .AddItem "GOLILLA PRESION"
+    .AddItem "GOMAS VARIAS"
+    .AddItem "HERR.AUTOMOTRIZ"
+    .AddItem "HERR.OTRAS MARCAS"
+    .AddItem "HERR.SOLDADOR"
+    .AddItem "HONDA"
+    .AddItem "HYUN"
+    .AddItem "IMPORTACION"
+    .AddItem "INSTRUMENTOS"
+    .AddItem "ISUZU"
+    .AddItem "KARCHER"
+    .AddItem "KIA"
+    .AddItem "LADA"
+    .AddItem "LOCTITE"
+    .AddItem "LUB PETRONAS"
+    .AddItem "LUBRICANTE"
+    .AddItem "MAHINDRA"
+    .AddItem "MAKITA"
+    .AddItem "MAZDA"
+    .AddItem "M.BENZ"
+    .AddItem "MIT"
+    .AddItem "NISSAN"
+    .AddItem "NIPLES"
+    .AddItem "OPEL"
+    .AddItem "OR"
+    .AddItem "PASTILLA FRENO"
+    .AddItem "PERNO"
+    .AddItem "PERNO RUEDA"
+    .AddItem "PIOLAS-CADENAS"
+    .AddItem "PINTURAS"
+    .AddItem "PROD QUIMICOS"
+    .AddItem "PRODUCTOS ADM."
+    .AddItem "RADIADOR"
+    .AddItem "RENAULT"
+    .AddItem "REP VARIOS"
+    .AddItem "RETENES"
+    .AddItem "RODAMIENTOS"
+    .AddItem "ROTACION"
+    .AddItem "SAMSUNG"
+    .AddItem "SEGUROS"
+    .AddItem "SMART TOOLS"
+    .AddItem "SOPO"
+    .AddItem "SSANGYONG"
+    .AddItem "STANLEY"
+    .AddItem "SUBARU"
+    .AddItem "SUZUKI"
+    .AddItem "TOTAL HERRAMIENTAS"
+    .AddItem "TUERCA RUEDA"
+    .AddItem "TUERCAS"
+    .AddItem "VARIOS"
+    .AddItem "VW"
+    .AddItem "DAIH"
+    .AddItem "NIPLES"
+    .AddItem "SSANGYONG"
+    .AddItem "DAEWOO"
+    .AddItem "CHRISLER/DODGE/JEEP"
+    .AddItem "SAMSUNG"
+    .AddItem "PIOLAS-CADENAS"
+    .AddItem "MADERAS"
+    .AddItem "SOPORTES"
+    .AddItem "PERNO RUEDA"
+    .AddItem "PINTURAS"
+    .AddItem "CORDEL"
+    .AddItem "LUB PETRONAS"
+    .AddItem "ISUZU"
+    .AddItem "RADIADOR"
+    .AddItem "TOTAL HERRAMIENTAS"
+    .AddItem "ABRAZADERAS"
+    .AddItem "GOLILLA PLANA"
+    .AddItem "GOLILLA PRESION"
+    .AddItem "ADITIVOS"
+    .AddItem "LUV"
+    .AddItem "LADA"
+    .AddItem "CARBURADOR"
+    .AddItem "SILENCIADOR"
+    .AddItem "GOMAS VARIAS"
+    .AddItem "SEGUROS"
+    .AddItem "ORING"
+    .AddItem "RESORTES"
+    .AddItem "SOLDADURAS"
+    .AddItem "SERVICIOS"
+    .AddItem "VICSA"
+    .AddItem "YATO"
+    .AddItem "ENCARGO"
+    End With
+
+    
+End Sub
